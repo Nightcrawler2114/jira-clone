@@ -12,3 +12,13 @@ class Sprint(BaseModel):
     end_date: datetime
     active: bool
     project_id: int
+
+
+class CreateUpdateSprint(BaseModel):
+
+    title: str
+    description: str
+    start_date: datetime
+    end_date: datetime
+    active: bool
+    project_id: int

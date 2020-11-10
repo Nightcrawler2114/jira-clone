@@ -10,3 +10,11 @@ class Project(BaseModel):
     description: str
     start_date: datetime
     end_date: datetime
+
+
+class CreateUpdateProject(BaseModel):
+
+    title: str
+    description: str
+    start_date: datetime
+    end_date: datetime

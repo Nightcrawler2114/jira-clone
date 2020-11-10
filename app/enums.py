@@ -22,4 +22,4 @@ class PriorityEnum(enum.Enum):
 class RoleEnum(enum.Enum):
 
     admin = 'admin'
-    user = 'admin'
+    user = 'user'
