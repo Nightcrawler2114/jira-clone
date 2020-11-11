@@ -1,10 +1,13 @@
 from fastapi import APIRouter
+from fastapi.responses import JSONResponse
 
-from typing import List
+from typing import List, Union
 
 from app.schemas.users import User, CreateUpdateUser
 
 from app.functions.users import UsersListHandler, CreateUserHandler, UpdateUserHandler, DeleteUserHandler
+
+from app.exceptions import UserDoesNotExistsException
 
 router = APIRouter()
 
@@ -22,12 +25,24 @@ async def create_user(model: CreateUpdateUser) -> User:
 
 
 @router.put("/users/{user_id}", tags=["users"])
-async def update_user(user_id: int, model: CreateUpdateUser) -> User:
+async def update_user(user_id: int, model: CreateUpdateUser) -> Union[User, JSONResponse]:
 
-    return await UpdateUserHandler().handle(user_id, model)
+    try:
+
+        return await UpdateUserHandler().handle(user_id, model)
+
+    except UserDoesNotExistsException:
+
+        return JSONResponse(status_code=404, content={"message": "User does not exist"})
 
 
 @router.delete("/users/{user_id}", tags=["users"])
-async def delete_user(user_id: int) -> None:
+async def delete_user(user_id: int) -> Union[None, JSONResponse]:
 
-    return await DeleteUserHandler().handle(user_id)
+    try:
+
+        return await DeleteUserHandler().handle(user_id)
+
+    except UserDoesNotExistsException:
+
+        return JSONResponse(status_code=404, content={"message": "User does not exist"})

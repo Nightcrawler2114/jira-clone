@@ -63,7 +63,7 @@ class UpdateProjectHandler:
 
         if not project:
 
-            raise ProjectDoesNotExistsException('Project does not exists')
+            raise ProjectDoesNotExistsException('Project does not exist')
 
         async for row in database.iterate(query=projects.select()):
 

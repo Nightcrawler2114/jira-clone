@@ -32,3 +32,16 @@ class UserDoesNotExistsException(Exception):
     """Exception raised when user does not exists."""
 
 
+# tasks
+
+
+class TaskTitleDuplicateException(Exception):
+
+    """Exception raised when task with the same title already exists."""
+
+
+class TaskDoesNotExistsException(Exception):
+
+    """Exception raised when task does not exists."""
+
+
