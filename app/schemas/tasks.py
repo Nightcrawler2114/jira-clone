@@ -15,6 +15,13 @@ class Attachment(BaseModel):
     task_id: int
 
 
+class CreateAttachment(BaseModel):
+
+    filename: str
+    filepath: str
+    task_id: int
+
+
 class Task(BaseModel):
 
     id: int

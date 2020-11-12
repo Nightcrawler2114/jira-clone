@@ -24,6 +24,11 @@ class SprintDoesNotExistsException(Exception):
     """Exception raised when sprint does not exists."""
 
 
+class ReferenceProjectDoesNotExistException(Exception):
+
+    """Exception raised when reference project does not exists."""
+
+
 # users
 
 
@@ -43,5 +48,15 @@ class TaskTitleDuplicateException(Exception):
 class TaskDoesNotExistsException(Exception):
 
     """Exception raised when task does not exists."""
+
+
+class ReferenceUserDoesNotExistException(Exception):
+
+    """Exception raised when reference user does not exists."""
+
+
+class AttachmentDoesNotExistException(Exception):
+
+    """Exception raised when attachment does not exists."""
 
 

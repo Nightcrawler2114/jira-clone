@@ -1,9 +1,11 @@
 from typing import List
 
 from app.models.sprints import sprints
+from app.models.projects import projects
+
 from app.schemas.sprints import Sprint, CreateUpdateSprint
 
-from app.exceptions import SprintTitleDuplicateException, SprintDoesNotExistsException
+from app.exceptions import SprintTitleDuplicateException, SprintDoesNotExistsException, ReferenceProjectDoesNotExistException
 
 from app.db import database
 
@@ -35,6 +37,10 @@ class CreateSprintHandler:
 
             if row['title'] == model.title:
                 raise SprintTitleDuplicateException('Title is already taken')
+
+        if not await database.fetch_one(projects.select().where(projects.c.id == model.project_id)):
+
+            raise ReferenceProjectDoesNotExistException('Reference project does not exist')
 
     async def _create(self, model: CreateUpdateSprint) -> Sprint:
 
@@ -69,6 +75,10 @@ class UpdateSprintHandler:
 
             if row['title'] == model.title:
                 raise SprintTitleDuplicateException('Title is already taken')
+
+        if not await database.fetch_one(projects.select().where(projects.c.id == model.project_id)):
+
+            raise ReferenceProjectDoesNotExistException('Reference project does not exist')
 
     async def _update(self, sprint: Sprint, model: CreateUpdateSprint) -> Sprint:
 

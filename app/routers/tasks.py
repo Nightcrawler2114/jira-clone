@@ -3,11 +3,24 @@ from fastapi.responses import JSONResponse
 
 from typing import List, Union
 
-from app.functions.tasks import TasksListHandler, CreateTaskHandler, UpdateTaskHandler, DeleteTaskHandler
+from app.functions.tasks import (
+    TasksListHandler,
+    CreateTaskHandler,
+    UpdateTaskHandler,
+    DeleteTaskHandler,
+    CreateAttachmentHandler,
+    DeleteAttachmentHandler
+)
 
-from app.schemas.tasks import Task, CreateUpdateTask, Attachment
+from app.schemas.tasks import Task, CreateUpdateTask, Attachment, CreateAttachment
 
-from app.exceptions import TaskDoesNotExistsException, TaskTitleDuplicateException
+from app.exceptions import (
+    TaskDoesNotExistsException,
+    TaskTitleDuplicateException,
+    ReferenceUserDoesNotExistException,
+    ReferenceProjectDoesNotExistException,
+    AttachmentDoesNotExistException
+)
 
 router = APIRouter()
 
@@ -25,9 +38,22 @@ async def create_task(model: CreateUpdateTask) -> Union[Task, JSONResponse]:
 
         return await CreateTaskHandler().handle(model)
 
-    except TaskTitleDuplicateException:
+    except (
+            TaskTitleDuplicateException,
+            ReferenceUserDoesNotExistException,
+            ReferenceProjectDoesNotExistException
+    ) as e:
 
-        return JSONResponse(status_code=400, content={"message": "Title is already taken"})
+        if str(e) == 'Title is already taken':
+
+            return JSONResponse(status_code=400, content={"message": str(e)})
+
+        elif (
+                str(e) == 'Reference project does not exist' or
+                str(e) == 'Reference user does not exist'
+        ):
+
+            return JSONResponse(status_code=404, content={"message": str(e)})
 
 
 @router.put("/tasks/{task_id}", tags=["tasks"])
@@ -37,15 +63,24 @@ async def update_task(task_id: int, model: CreateUpdateTask) -> Union[Task, JSON
 
         return await UpdateTaskHandler().handle(task_id, model)
 
-    except (TaskTitleDuplicateException, TaskDoesNotExistsException) as e:
+    except (
+            TaskTitleDuplicateException,
+            TaskDoesNotExistsException,
+            ReferenceUserDoesNotExistException,
+            ReferenceProjectDoesNotExistException
+    ) as e:
 
-        if e == TaskTitleDuplicateException:
+        if str(e) == 'Title is already taken':
 
-            return JSONResponse(status_code=400, content={"message": "Title is already taken"})
+            return JSONResponse(status_code=400, content={"message": str(e)})
 
-        elif e == TaskDoesNotExistsException:
+        elif (
+                str(e) == 'Task does not exists' or
+                str(e) == 'Reference project does not exist' or
+                str(e) == 'Reference user does not exist'
+        ):
 
-            return JSONResponse(status_code=404, content={"message": "Task does not exist"})
+            return JSONResponse(status_code=404, content={"message": str(e)})
 
 
 @router.delete("/tasks/{task_id}", tags=["tasks"])
@@ -55,16 +90,31 @@ async def delete_task(task_id: int) -> Union[None, JSONResponse]:
 
         return await DeleteTaskHandler().handle(task_id)
 
-    except TaskDoesNotExistsException:
+    except TaskDoesNotExistsException as e:
 
-        return JSONResponse(status_code=404, content={"message": "Task does not exist"})
+        return JSONResponse(status_code=404, content={"message": str(e)})
 
 
 @router.post("/tasks/{task_id}/attachments}", tags=["tasks"])
-async def create_attachment(task_id: int):
-    return
+async def create_attachment(task_id: int, model: CreateAttachment):
+
+    try:
+
+        return await CreateAttachmentHandler().handle(model)
+
+    except TaskDoesNotExistsException as e:
+
+        return JSONResponse(status_code=404, content={"message": str(e)})
 
 
 @router.delete("/tasks/{task_id}/attachments/{attachment_id}", tags=["tasks"])
 async def delete_attachment(task_id: int, attachment_id: int):
-    return
+
+    try:
+
+        return await DeleteAttachmentHandler().handle(attachment_id)
+
+    except AttachmentDoesNotExistException as e:
+
+        return JSONResponse(status_code=404, content={"message": str(e)})
+
