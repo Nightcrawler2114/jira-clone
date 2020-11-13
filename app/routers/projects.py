@@ -1,13 +1,16 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 
 from typing import List, Union
 
 from app.schemas.projects import Project, CreateUpdateProject
+from app.schemas.users import User
 
 from app.functions.projects import ProjectsListHandler, CreateProjectHandler, DeleteProjectHandler, UpdateProjectHandler
 
-from app.exceptions import ProjectTitleDuplicateException, ProjectDoesNotExistsException
+from app.exceptions import ProjectTitleDuplicateException, ProjectDoesNotExistsException, UnauthorizedAccessException
+
+from app.auth import get_current_user
 
 router = APIRouter()
 
@@ -19,44 +22,62 @@ async def projects_list() -> List[Project]:
 
 
 @router.post("/projects", tags=["projects"], response_model=Project)
-async def create_project(model: CreateUpdateProject) -> Union[Project, JSONResponse]:
+async def create_project(
+        model: CreateUpdateProject,
+        user: User = Depends(get_current_user)
+) -> Union[Project, JSONResponse]:
 
     try:
 
-        return await CreateProjectHandler().handle(model)
-    except ProjectTitleDuplicateException:
+        return await CreateProjectHandler().handle(model, user)
 
-        return JSONResponse(status_code=400, content={"message": "Title is already taken"})
+    except ProjectTitleDuplicateException as e:
+
+        return JSONResponse(status_code=400, content={"message": str(e)})
+
+    except UnauthorizedAccessException as e:
+
+        return JSONResponse(status_code=403, content={"message": str(e)})
 
 
 @router.put("/projects/{project_id}", tags=["projects"], response_model=Project)
-async def update_project(project_id: int, model: CreateUpdateProject) -> Union[Project, JSONResponse]:
+async def update_project(
+        project_id: int,
+        model: CreateUpdateProject,
+        user: User = Depends(get_current_user)
+) -> Union[Project, JSONResponse]:
 
     try:
 
-        return await UpdateProjectHandler().handle(project_id, model)
+        return await UpdateProjectHandler().handle(project_id, model, user)
 
-    except (ProjectTitleDuplicateException, ProjectDoesNotExistsException) as e:
+    except ProjectTitleDuplicateException as e:
 
-        if e == ProjectTitleDuplicateException:
+        return JSONResponse(status_code=400, content={"message": str(e)})
 
-            return JSONResponse(status_code=400, content={"message": "Title is already taken"})
+    except ProjectDoesNotExistsException as e:
 
-        elif e == ProjectDoesNotExistsException:
+        return JSONResponse(status_code=404, content={"message": str(e)})
 
-            return JSONResponse(status_code=404, content={"message": "Project does not exist"})
+    except UnauthorizedAccessException as e:
+
+        return JSONResponse(status_code=403, content={"message": str(e)})
 
 
 @router.delete("/projects/{project_id}", tags=["projects"])
-async def delete_project(project_id: int) -> Union[None, JSONResponse]:
+async def delete_project(project_id: int, user: User = Depends(get_current_user)) -> Union[None, JSONResponse]:
 
     try:
 
-        return await DeleteProjectHandler().handle(project_id)
+        return await DeleteProjectHandler().handle(project_id, user)
 
-    except ProjectDoesNotExistsException:
+    except ProjectDoesNotExistsException as e:
 
-        return JSONResponse(status_code=404, content={"message": "Project does not exist"})
+        return JSONResponse(status_code=404, content={"message": str(e)})
+
+    except UnauthorizedAccessException as e:
+
+        return JSONResponse(status_code=403, content={"message": str(e)})
 
 
 

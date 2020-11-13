@@ -2,8 +2,11 @@ from typing import List
 
 from app.models.projects import projects
 from app.schemas.projects import CreateUpdateProject, Project
+from app.schemas.users import User
 
-from app.exceptions import ProjectTitleDuplicateException, ProjectDoesNotExistsException
+from app.exceptions import ProjectTitleDuplicateException, ProjectDoesNotExistsException, UnauthorizedAccessException
+
+from app.enums import RoleEnum
 
 from app.db import database
 
@@ -23,13 +26,17 @@ class ProjectsListHandler:
 
 class CreateProjectHandler:
 
-    async def handle(self, model: CreateUpdateProject) -> Project:
+    async def handle(self, model: CreateUpdateProject, user: User) -> Project:
 
-        await self._validate(model)
+        await self._validate(model, user)
 
         return await self._create(model)
 
-    async def _validate(self, model: CreateUpdateProject) -> None:
+    async def _validate(self, model: CreateUpdateProject, user: User) -> None:
+
+        if user['role'] == RoleEnum.user:
+
+            raise UnauthorizedAccessException('You do not have enough rights')
 
         async for row in database.iterate(query=projects.select()):
 
@@ -49,17 +56,21 @@ class CreateProjectHandler:
 
 class UpdateProjectHandler:
 
-    async def handle(self, project_id: int, model: CreateUpdateProject) -> Project:
+    async def handle(self, project_id: int, model: CreateUpdateProject, user: User) -> Project:
 
         query = projects.select().where(projects.c.id == project_id)
 
         project = await database.fetch_one(query=query)
 
-        await self._validate(project, model)
+        await self._validate(project, model, user)
 
         return await self._update(project, model)
 
-    async def _validate(self, project: Project, model: CreateUpdateProject) -> None:
+    async def _validate(self, project: Project, model: CreateUpdateProject, user: User) -> None:
+
+        if user['role'] == RoleEnum.user:
+
+            raise UnauthorizedAccessException('You do not have enough rights')
 
         if not project:
 
@@ -83,26 +94,28 @@ class UpdateProjectHandler:
 
 class DeleteProjectHandler:
 
-    async def handle(self, project_id: int) -> None:
+    async def handle(self, project_id: int, user: User) -> None:
 
         query = projects.select().where(projects.c.id == project_id)
 
         project = await database.fetch_one(query=query)
 
-        await self._validate(project)
+        await self._validate(project, user)
 
         return await self._delete(project)
 
-    async def _validate(self, project: Project) -> None:
+    async def _validate(self, project: Project, user: User) -> None:
 
         if not project:
 
             raise ProjectDoesNotExistsException('Project does not exists')
+
+        if user['role'] == RoleEnum.user:
+
+            raise UnauthorizedAccessException('You do not have enough rights')
 
     async def _delete(self, project: Project) -> None:
 
         query = projects.delete().where(projects.c.id == project['id'])
 
         await database.fetch_one(query=query)
-
-

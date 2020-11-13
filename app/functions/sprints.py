@@ -1,37 +1,55 @@
-from typing import List
+from typing import List, Optional
 
 from app.models.sprints import sprints
 from app.models.projects import projects
 
 from app.schemas.sprints import Sprint, CreateUpdateSprint
+from app.schemas.users import User
 
-from app.exceptions import SprintTitleDuplicateException, SprintDoesNotExistsException, ReferenceProjectDoesNotExistException
+from app.exceptions import (
+    SprintTitleDuplicateException,
+    SprintDoesNotExistsException,
+    ReferenceProjectDoesNotExistException,
+    UnauthorizedAccessException
+)
+
+from app.enums import RoleEnum
 
 from app.db import database
 
 
 class SprintsListHandler:
 
-    async def handle(self) -> List[Sprint]:
+    async def handle(self, project_id: Optional[int]) -> List[Sprint]:
 
-        return await self._get_sprints()
+        return await self._get_sprints(project_id)
 
-    async def _get_sprints(self) -> List[Sprint]:
+    async def _get_sprints(self, project_id: Optional[int]) -> List[Sprint]:
 
-        query = sprints.select()
+        if project_id:
+
+            query = sprints.select().where(sprints.c.id == project_id)
+
+        else:
+
+            query = sprints.select()
 
         return await database.fetch_all(query)
 
 
 class CreateSprintHandler:
 
-    async def handle(self, model: CreateUpdateSprint) -> Sprint:
+    async def handle(self, model: CreateUpdateSprint, user: User) -> Sprint:
 
-        await self._validate(model)
+        await self._validate(model, user)
 
         return await self._create(model)
 
-    async def _validate(self, model: CreateUpdateSprint) -> None:
+    async def _validate(self, model: CreateUpdateSprint, user: User) -> None:
+
+        if user['role'] == RoleEnum.user:
+
+            raise UnauthorizedAccessException('You do not have enough rights')
 
         async for row in database.iterate(query=sprints.select()):
 
@@ -55,21 +73,25 @@ class CreateSprintHandler:
 
 class UpdateSprintHandler:
 
-    async def handle(self, sprint_id: int, model: CreateUpdateSprint) -> Sprint:
+    async def handle(self, sprint_id: int, model: CreateUpdateSprint, user: User) -> Sprint:
 
         query = sprints.select().where(sprints.c.id == sprint_id)
 
         sprint = await database.fetch_one(query=query)
 
-        await self._validate(sprint, model)
+        await self._validate(sprint, model, user)
 
         return await self._update(sprint, model)
 
-    async def _validate(self, sprint: Sprint, model: CreateUpdateSprint) -> None:
+    async def _validate(self, sprint: Sprint, model: CreateUpdateSprint, user: User) -> None:
 
         if not sprint:
 
             raise SprintDoesNotExistsException('Sprint does not exists')
+
+        if user['role'] == RoleEnum.user:
+
+            raise UnauthorizedAccessException('You do not have enough rights')
 
         async for row in database.iterate(query=sprints.select()):
 
@@ -93,21 +115,25 @@ class UpdateSprintHandler:
 
 class DeleteSprintHandler:
 
-    async def handle(self, sprint_id: int) -> None:
+    async def handle(self, sprint_id: int, user: User) -> None:
 
         query = sprints.select().where(sprints.c.id == sprint_id)
 
         sprint = await database.fetch_one(query=query)
 
-        await self._validate(sprint)
+        await self._validate(sprint, user)
 
         return await self._delete(sprint)
 
-    async def _validate(self, sprint: Sprint) -> None:
+    async def _validate(self, sprint: Sprint, user: User) -> None:
 
         if not sprint:
 
             raise SprintDoesNotExistsException('Sprint does not exists')
+
+        if user['role'] == RoleEnum.user:
+
+            raise UnauthorizedAccessException('You do not have enough rights')
 
     async def _delete(self, sprint: Sprint) -> None:
 

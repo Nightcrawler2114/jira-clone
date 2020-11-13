@@ -1,3 +1,11 @@
+# general
+
+
+class UnauthorizedAccessException(Exception):
+
+    """Exception raised when user doesn't have respective role to conduct certain actions."""
+
+
 # projects
 
 

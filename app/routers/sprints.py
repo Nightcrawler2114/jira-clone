@@ -1,70 +1,86 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 
-from typing import List, Union
+from typing import List, Union, Optional
 
 from app.schemas.sprints import Sprint, CreateUpdateSprint
+from app.schemas.users import User
 
 from app.functions.sprints import SprintsListHandler, CreateSprintHandler, UpdateSprintHandler, DeleteSprintHandler
 
-from app.exceptions import SprintDoesNotExistsException, SprintTitleDuplicateException, ReferenceProjectDoesNotExistException
+from app.exceptions import (
+    SprintTitleDuplicateException,
+    SprintDoesNotExistsException,
+    ReferenceProjectDoesNotExistException,
+    UnauthorizedAccessException
+)
+
+from app.auth import get_current_user
 
 router = APIRouter()
 
 
 @router.get("/sprints", tags=["sprints"])
-async def sprints_list() -> List[Sprint]:
+async def sprints_list(project_id: Optional[int]) -> List[Sprint]:
 
-    return await SprintsListHandler().handle()
+    return await SprintsListHandler().handle(project_id)
 
 
 @router.post("/sprints", tags=["sprints"])
-async def create_sprint(model: CreateUpdateSprint) -> Union[Sprint, JSONResponse]:
+async def create_sprint(model: CreateUpdateSprint, user: User = Depends(get_current_user)) -> Union[Sprint, JSONResponse]:
 
     try:
 
-        return await CreateSprintHandler().handle(model)
+        return await CreateSprintHandler().handle(model, user)
 
-    except (SprintTitleDuplicateException, ReferenceProjectDoesNotExistException) as e:
+    except SprintTitleDuplicateException as e:
 
-        if str(e) == 'Title is already taken':
+        return JSONResponse(status_code=400, content={"message": str(e)})
 
-            return JSONResponse(status_code=400, content={"message": str(e)})
+    except ReferenceProjectDoesNotExistException as e:
 
-        elif str(e) == 'Reference project does not exist':
+        return JSONResponse(status_code=404, content={"message": str(e)})
 
-            return JSONResponse(status_code=404, content={"message": str(e)})
+    except UnauthorizedAccessException as e:
+
+        return JSONResponse(status_code=403, content={"message": str(e)})
 
 
 @router.put("/sprints/{sprint_id}", tags=["sprints"])
-async def update_sprint(sprint_id: int, model: CreateUpdateSprint) -> Union[Sprint, JSONResponse]:
+async def update_sprint(
+        sprint_id: int,
+        model: CreateUpdateSprint,
+        user: User = Depends(get_current_user)
+) -> Union[Sprint, JSONResponse]:
 
     try:
 
-        return await UpdateSprintHandler().handle(sprint_id, model)
+        return await UpdateSprintHandler().handle(sprint_id, model, user)
 
-    except (SprintTitleDuplicateException, SprintDoesNotExistsException, ReferenceProjectDoesNotExistException) as e:
+    except SprintTitleDuplicateException as e:
 
-        if str(e) == 'Title is already taken':
+        return JSONResponse(status_code=400, content={"message": str(e)})
 
-            return JSONResponse(status_code=400, content={"message": str(e)})
+    except (SprintDoesNotExistsException, ReferenceProjectDoesNotExistException) as e:
 
-        elif str(e) == 'Sprint does not exists':
+        return JSONResponse(status_code=404, content={"message": str(e)})
 
-            return JSONResponse(status_code=404, content={"message": str(e)})
+    except UnauthorizedAccessException as e:
 
-        elif str(e) == 'Reference project does not exist':
-
-            return JSONResponse(status_code=404, content={"message": str(e)})
+        return JSONResponse(status_code=403, content={"message": str(e)})
 
 
 @router.delete("/sprints/{sprint_id}", tags=["sprints"])
-async def delete_sprint(sprint_id: int) -> Union[None, JSONResponse]:
+async def delete_sprint(sprint_id: int, user: User = Depends(get_current_user)) -> Union[None, JSONResponse]:
 
     try:
 
-        return await DeleteSprintHandler().handle(sprint_id)
+        return await DeleteSprintHandler().handle(sprint_id, user)
 
     except SprintDoesNotExistsException as e:
 
         return JSONResponse(status_code=404, content={"message": str(e)})
+
+    except UnauthorizedAccessException as e:
+
+        return JSONResponse(status_code=403, content={"message": str(e)})

@@ -1,8 +1,8 @@
 import sqlalchemy
 import databases
 
+from app.settings import DATABASE_URL
 
-DATABASE_URL = "postgres://superuser:superuser@localhost:5433/jira-clone"
 
 database = databases.Database(DATABASE_URL)
 
