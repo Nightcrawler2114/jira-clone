@@ -20,13 +20,13 @@ from app.auth import get_current_user
 router = APIRouter()
 
 
-@router.get("/sprints", tags=["sprints"])
+@router.get("/sprints", tags=["sprints"], status_code=200)
 async def sprints_list(project_id: Optional[int]) -> List[Sprint]:
 
     return await SprintsListHandler().handle(project_id)
 
 
-@router.post("/sprints", tags=["sprints"])
+@router.post("/sprints", tags=["sprints"], status_code=201)
 async def create_sprint(model: CreateUpdateSprint, user: User = Depends(get_current_user)) -> Union[Sprint, JSONResponse]:
 
     try:
@@ -46,7 +46,7 @@ async def create_sprint(model: CreateUpdateSprint, user: User = Depends(get_curr
         return JSONResponse(status_code=403, content={"message": str(e)})
 
 
-@router.put("/sprints/{sprint_id}", tags=["sprints"])
+@router.put("/sprints/{sprint_id}", tags=["sprints"], status_code=200)
 async def update_sprint(
         sprint_id: int,
         model: CreateUpdateSprint,
@@ -70,7 +70,7 @@ async def update_sprint(
         return JSONResponse(status_code=403, content={"message": str(e)})
 
 
-@router.delete("/sprints/{sprint_id}", tags=["sprints"])
+@router.delete("/sprints/{sprint_id}", tags=["sprints"], status_code=200)
 async def delete_sprint(sprint_id: int, user: User = Depends(get_current_user)) -> Union[None, JSONResponse]:
 
     try:

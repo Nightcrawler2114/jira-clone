@@ -3,7 +3,9 @@ from typing import List
 from app.models.users import users
 from app.schemas.users import CreateUpdateUser, User
 
-from app.exceptions import UserDoesNotExistsException
+from app.exceptions import UserDoesNotExistsException, UnauthorizedAccessException
+
+from app.enums import RoleEnum
 
 from app.db import database
 
@@ -23,9 +25,17 @@ class UsersListHandler:
 
 class CreateUserHandler:
 
-    async def handle(self, model: CreateUpdateUser) -> User:
+    async def handle(self, model: CreateUpdateUser, user: User) -> User:
+
+        await self._validate(user)
 
         return await self._create(model)
+
+    async def _validate(self, user: User):
+
+        if user['role'] == RoleEnum.user or user['role'] == RoleEnum.product_owner:
+
+            raise UnauthorizedAccessException('You do not have enough rights')
 
     async def _create(self, model: CreateUpdateUser) -> User:
 
@@ -40,19 +50,23 @@ class CreateUserHandler:
 
 class UpdateUserHandler:
 
-    async def handle(self, user_id: int, model: CreateUpdateUser) -> User:
+    async def handle(self, user_id: int, model: CreateUpdateUser, user: User) -> User:
 
         query = users.select().where(users.c.id == user_id)
 
-        user = await database.fetch_one(query=query)
+        db_user = await database.fetch_one(query=query)
 
-        await self._validate(user)
+        await self._validate(db_user, user)
 
-        return await self._update(user, model)
+        return await self._update(db_user, model)
 
-    async def _validate(self, user: User) -> None:
+    async def _validate(self, model: User, user: User) -> None:
 
-        if not user:
+        if user['role'] == RoleEnum.user or user['role'] == RoleEnum.product_owner:
+
+            raise UnauthorizedAccessException('You do not have enough rights')
+
+        if not model:
 
             raise UserDoesNotExistsException('User does not exists')
 
@@ -69,19 +83,23 @@ class UpdateUserHandler:
 
 class DeleteUserHandler:
 
-    async def handle(self, user_id: int) -> None:
+    async def handle(self, user_id: int, user: User) -> None:
 
         query = users.select().where(users.c.id == user_id)
 
-        user = await database.fetch_one(query=query)
+        db_user = await database.fetch_one(query=query)
 
-        await self._validate(user)
+        await self._validate(db_user, user)
 
         return await self._delete(user)
 
-    async def _validate(self, user: User) -> None:
+    async def _validate(self, model: User, user: User) -> None:
 
-        if not user:
+        if user['role'] == RoleEnum.user or user['role'] == RoleEnum.product_owner:
+
+            raise UnauthorizedAccessException('You do not have enough rights')
+
+        if not model:
 
             raise UserDoesNotExistsException('User does not exists')
 

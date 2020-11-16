@@ -165,7 +165,7 @@ class CreateAttachmentHandler:
 
         return await self._create(model)
 
-    async def validate(self, model: CreateAttachment) -> None:
+    async def _validate(self, model: CreateAttachment) -> None:
 
         if not database.fetch_one(tasks.select().where(tasks.c.id == model.task_id)):
 

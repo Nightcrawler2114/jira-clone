@@ -49,18 +49,6 @@ class Task(BaseModel):
     assignee_id: int
     attachments: List[Attachment] = []
 
-    @validator('start_date')
-    def start_date_must_be_a_future_date(cls, v):
-        if v < datetime.now():
-            raise ValueError('Start date must be a future date')
-        return v
-
-    @validator('end_date')
-    def end_date_must_be_a_future_date(cls, v):
-        if v < datetime.now():
-            raise ValueError('End date must be a future date')
-        return v
-
 
 class CreateUpdateTask(BaseModel):
 

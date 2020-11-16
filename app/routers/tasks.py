@@ -25,13 +25,13 @@ from app.exceptions import (
 router = APIRouter()
 
 
-@router.get("/tasks", tags=["tasks"])
+@router.get("/tasks", tags=["tasks"], status_code=200)
 async def tasks_list() -> List[Task]:
 
     return await TasksListHandler().handle()
 
 
-@router.post("/tasks", tags=["tasks"])
+@router.post("/tasks", tags=["tasks"], status_code=201)
 async def create_task(model: CreateUpdateTask) -> Union[Task, JSONResponse]:
 
     try:
@@ -56,7 +56,7 @@ async def create_task(model: CreateUpdateTask) -> Union[Task, JSONResponse]:
             return JSONResponse(status_code=404, content={"message": str(e)})
 
 
-@router.put("/tasks/{task_id}", tags=["tasks"])
+@router.put("/tasks/{task_id}", tags=["tasks"], status_code=200)
 async def update_task(task_id: int, model: CreateUpdateTask) -> Union[Task, JSONResponse]:
 
     try:
@@ -83,7 +83,7 @@ async def update_task(task_id: int, model: CreateUpdateTask) -> Union[Task, JSON
             return JSONResponse(status_code=404, content={"message": str(e)})
 
 
-@router.delete("/tasks/{task_id}", tags=["tasks"])
+@router.delete("/tasks/{task_id}", tags=["tasks"], status_code=200)
 async def delete_task(task_id: int) -> Union[None, JSONResponse]:
 
     try:
@@ -95,7 +95,7 @@ async def delete_task(task_id: int) -> Union[None, JSONResponse]:
         return JSONResponse(status_code=404, content={"message": str(e)})
 
 
-@router.post("/tasks/{task_id}/attachments}", tags=["tasks"])
+@router.post("/tasks/{task_id}/attachments}", tags=["tasks"], status_code=201)
 async def create_attachment(task_id: int, model: CreateAttachment):
 
     try:
@@ -107,7 +107,7 @@ async def create_attachment(task_id: int, model: CreateAttachment):
         return JSONResponse(status_code=404, content={"message": str(e)})
 
 
-@router.delete("/tasks/{task_id}/attachments/{attachment_id}", tags=["tasks"])
+@router.delete("/tasks/{task_id}/attachments/{attachment_id}", tags=["tasks"], status_code=200)
 async def delete_attachment(task_id: int, attachment_id: int):
 
     try:

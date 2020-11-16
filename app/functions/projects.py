@@ -34,7 +34,7 @@ class CreateProjectHandler:
 
     async def _validate(self, model: CreateUpdateProject, user: User) -> None:
 
-        if user['role'] == RoleEnum.user:
+        if user['role'] == RoleEnum.user or user['role'] == RoleEnum.product_owner:
 
             raise UnauthorizedAccessException('You do not have enough rights')
 
@@ -68,7 +68,7 @@ class UpdateProjectHandler:
 
     async def _validate(self, project: Project, model: CreateUpdateProject, user: User) -> None:
 
-        if user['role'] == RoleEnum.user:
+        if user['role'] == RoleEnum.user or user['role'] == RoleEnum.product_owner:
 
             raise UnauthorizedAccessException('You do not have enough rights')
 
@@ -110,7 +110,7 @@ class DeleteProjectHandler:
 
             raise ProjectDoesNotExistsException('Project does not exists')
 
-        if user['role'] == RoleEnum.user:
+        if user['role'] == RoleEnum.user or user['role'] == RoleEnum.product_owner:
 
             raise UnauthorizedAccessException('You do not have enough rights')
 

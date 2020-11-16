@@ -15,13 +15,13 @@ from app.auth import get_current_user
 router = APIRouter()
 
 
-@router.get("/projects", tags=["projects"], response_model=List[Project])
+@router.get("/projects", tags=["projects"], response_model=List[Project], status_code=200)
 async def projects_list() -> List[Project]:
 
     return await ProjectsListHandler().handle()
 
 
-@router.post("/projects", tags=["projects"], response_model=Project)
+@router.post("/projects", tags=["projects"], response_model=Project, status_code=201)
 async def create_project(
         model: CreateUpdateProject,
         user: User = Depends(get_current_user)
@@ -40,7 +40,7 @@ async def create_project(
         return JSONResponse(status_code=403, content={"message": str(e)})
 
 
-@router.put("/projects/{project_id}", tags=["projects"], response_model=Project)
+@router.put("/projects/{project_id}", tags=["projects"], response_model=Project, status_code=200)
 async def update_project(
         project_id: int,
         model: CreateUpdateProject,
@@ -64,7 +64,7 @@ async def update_project(
         return JSONResponse(status_code=403, content={"message": str(e)})
 
 
-@router.delete("/projects/{project_id}", tags=["projects"])
+@router.delete("/projects/{project_id}", tags=["projects"], status_code=200)
 async def delete_project(project_id: int, user: User = Depends(get_current_user)) -> Union[None, JSONResponse]:
 
     try:

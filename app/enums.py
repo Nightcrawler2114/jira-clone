@@ -23,3 +23,4 @@ class RoleEnum(enum.Enum):
 
     admin = 'admin'
     user = 'user'
+    product_owner = 'product owner'

@@ -6,11 +6,13 @@ from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from app.db import database
 from app.models.users import users
 
+from app.schemas.users import User
+
 security = HTTPBasic()
 
 
-async def get_current_user(credentials: HTTPBasicCredentials = Depends(security)):
-    print(credentials)
+async def get_current_user(credentials: HTTPBasicCredentials = Depends(security)) -> User:
+
     async for row in database.iterate(query=users.select()):
 
         if row['username'] == credentials.username:
@@ -35,9 +37,5 @@ async def get_current_user(credentials: HTTPBasicCredentials = Depends(security)
             detail="Incorrect password",
             headers={"WWW-Authenticate": "Basic"},
         )
+
     return user
-
-
-# @app.get("/users/me")
-# def read_current_user(username: str = Depends(get_current_username)):
-#     return {"username": username}
