@@ -1,0 +1,70 @@
+# general
+
+
+class UnauthorizedAccessException(Exception):
+
+    """Exception raised when user doesn't have respective role to conduct certain actions."""
+
+
+# projects
+
+
+class ProjectTitleDuplicateException(Exception):
+
+    """Exception raised when project with the same title already exists."""
+
+
+class ProjectDoesNotExistsException(Exception):
+
+    """Exception raised when project does not exists."""
+
+
+# sprints
+
+
+class SprintTitleDuplicateException(Exception):
+
+    """Exception raised when sprint with the same title already exists."""
+
+
+class SprintDoesNotExistsException(Exception):
+
+    """Exception raised when sprint does not exists."""
+
+
+class ReferenceProjectDoesNotExistException(Exception):
+
+    """Exception raised when reference project does not exists."""
+
+
+# users
+
+
+class UserDoesNotExistsException(Exception):
+
+    """Exception raised when user does not exists."""
+
+
+# tasks
+
+
+class TaskTitleDuplicateException(Exception):
+
+    """Exception raised when task with the same title already exists."""
+
+
+class TaskDoesNotExistsException(Exception):
+
+    """Exception raised when task does not exists."""
+
+
+class ReferenceUserDoesNotExistException(Exception):
+
+    """Exception raised when reference user does not exists."""
+
+
+class AttachmentDoesNotExistException(Exception):
+
+    """Exception raised when attachment does not exists."""
+
+

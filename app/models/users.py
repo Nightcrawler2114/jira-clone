@@ -10,5 +10,7 @@ users = sqlalchemy.Table(
     metadata,
     sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True),
     sqlalchemy.Column("name", sqlalchemy.String),
+    sqlalchemy.Column("username", sqlalchemy.String),
+    sqlalchemy.Column("password", sqlalchemy.String),
     sqlalchemy.Column("role", sqlalchemy.Enum(RoleEnum)),
 )

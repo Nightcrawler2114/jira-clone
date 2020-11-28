@@ -1,5 +1,3 @@
-from typing import List, Optional
-
 from app.asgi import get_asgi_application
 
 from app.db import database
